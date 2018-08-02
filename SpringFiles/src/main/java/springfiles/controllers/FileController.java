@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,12 +22,13 @@ import springfiles.models.FileInfo;
 import springfiles.services.FileStorageImpl;
 
 @RestController
+@RequestMapping("/file")
 public class FileController {
 
 	@Autowired
-	FileStorageImpl fileStorageImpl;
+	private FileStorageImpl fileStorageImpl;
 
-	@PostMapping("/")
+	@PostMapping("/upload/")
 	public String uploadMultipartFile(@RequestParam("uploadfile") MultipartFile file, Model model) {
 		try {
 			fileStorageImpl.store(file);
@@ -34,13 +36,13 @@ public class FileController {
 		} catch (Exception e) {
 			model.addAttribute("message", "Fail! -> uploaded filename: " + file.getOriginalFilename());
 		}
-		return "multipartfile/uploadform.html";
+		return "file uploaded";
 	}
 
-	@GetMapping("/files")
+	@GetMapping("/list")
 	public String getListFiles(Model model) {
 
-		List<FileInfo> fileInfos = fileStorageImpl.loadFiles().map(path -> {
+		List<FileInfo> fileInfos = fileStorageImpl.getPath().map(path -> {
 			String filename = path.getFileName().toString();
 			String url = MvcUriComponentsBuilder
 					.fromMethodName(FileController.class, "downloadFile", path.getFileName().toString()).build()
@@ -59,17 +61,17 @@ public class FileController {
 	/*
 	 * Download Files
 	 */
-	@GetMapping("/files/{filename}")
+	@GetMapping("/download/{filename}")
 	public ResponseEntity<Resource> downloadFile(@PathVariable String filename) {
-		Resource file = fileStorageImpl.loadFile(filename);
+		Resource file = fileStorageImpl.download(filename);
 		return ResponseEntity.ok()
 				.header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + file.getFilename() + "\"")
 				.body(file);
 	}
 	
-	@DeleteMapping(value = "{fileName}")
+	@DeleteMapping(value = "/{fileName}")
 	public void deleteFile(@PathVariable String fileName) {
-		fileStorageImpl.deleteFile(fileName);
+		fileStorageImpl.delete(fileName);
 	}
 	
 	

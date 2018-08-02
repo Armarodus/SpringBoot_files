@@ -10,11 +10,11 @@ public interface FileStorage {
 
 	public void store(MultipartFile file);
 
-	public Resource loadFile(String filename);
+	public Resource download(String filename);
 
 	public void deleteAll();
 
-	public void deleteFile(String filename);
+	public void delete(String filename);
 
-	public Stream<Path> loadFiles();
+	public Stream<Path> getPath();
 }
